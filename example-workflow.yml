@@ -1,0 +1,152 @@
+name: Data Pipeline Quality Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'data/**'
+      - 'pipelines/**'
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  semantic-validation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup test data
+        run: |
+          mkdir -p data
+          # Simulate a data file (replace with your actual data source)
+          echo "transaction_id,amount,currency" > data/transactions.csv
+          echo "1,100.50,USD" >> data/transactions.csv
+          echo "2,250.00,USD" >> data/transactions.csv
+          echo "3,75.25,USD" >> data/transactions.csv
+      
+      # Example 1: Detect USD to JPY currency conversion
+      - name: Check for currency unit corruption
+        uses: ./.github/actions/data-semantic-guard
+        with:
+          file_type: csv
+          file_path: data/transactions.csv
+          comparison_type: currency_usd_to_jpy
+          numeric_column: amount
+          confidence_threshold: 90
+        continue-on-error: true
+        id: currency_check
+      
+      # Example 2: Detect temperature unit changes
+      - name: Check temperature data
+        if: always()
+        uses: ./.github/actions/data-semantic-guard
+        with:
+          file_type: json
+          file_path: data/weather_data.json
+          comparison_type: temperature_c_to_f
+          numeric_column: temperature
+          baseline_file: .github/baselines/weather-baseline.json
+        continue-on-error: true
+        id: temperature_check
+      
+      # Example 3: Generic distribution check
+      - name: Check metric distributions
+        if: always()
+        uses: ./.github/actions/data-semantic-guard
+        with:
+          file_type: json
+          file_path: data/metrics.json
+          comparison_type: custom_numeric_distribution
+          numeric_column: metric_value
+          confidence_threshold: 85
+        continue-on-error: true
+        id: metrics_check
+      
+      # Upload artifact for visualization
+      - name: Upload corruption report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: silent-data-corruption-report
+          path: silent-data-corruption-report.json
+          retention-days: 30
+      
+      # Notify on detection
+      - name: Post results summary
+        if: always()
+        run: |
+          echo "## 🛡️ Data Semantic Guard Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f silent-data-corruption-report.json ]; then
+            echo "### Confidence Score" >> $GITHUB_STEP_SUMMARY
+            CONFIDENCE=$(jq -r '.metadata.confidence_score' silent-data-corruption-report.json)
+            STATUS=$(jq -r '.status' silent-data-corruption-report.json)
+            
+            echo "- **Status**: $STATUS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Confidence**: $CONFIDENCE%" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            ANOMALIES=$(jq -r '.detected_anomalies[]' silent-data-corruption-report.json)
+            if [ ! -z "$ANOMALIES" ]; then
+              echo "### 🚨 Detected Anomalies" >> $GITHUB_STEP_SUMMARY
+              echo "$ANOMALIES" | while read line; do
+                echo "- $line" >> $GITHUB_STEP_SUMMARY
+              done
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "### 📊 View Visualization" >> $GITHUB_STEP_SUMMARY
+            echo "Download the artifact and upload to: https://your-org.github.io/data-semantic-guard" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      # Fail workflow if high-confidence corruption detected
+      - name: Evaluate final status
+        if: always()
+        run: |
+          if [ -f silent-data-corruption-report.json ]; then
+            STATUS=$(jq -r '.status' silent-data-corruption-report.json)
+            if [ "$STATUS" = "FAILED" ]; then
+              echo "❌ Silent data corruption detected. Failing workflow."
+              exit 1
+            fi
+          fi
+          echo "✅ All semantic validation checks passed"
+
+  # Optional: Deploy visualization to GitHub Pages
+  deploy-visualization:
+    needs: semantic-validation
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: silent-data-corruption-report
+          path: visualization/data
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: visualization
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

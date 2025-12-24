@@ -1,0 +1,44 @@
+name: Data Quality Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'data/**'
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+
+jobs:
+  semantic-validation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Validate data integrity
+        uses: ./.github/actions/data-semantic-guard
+        with:
+          file_type: csv
+          file_path: data/your-data-file.csv
+          comparison_type: currency_usd_to_jpy
+          numeric_column: amount
+          confidence_threshold: 90
+        continue-on-error: true
+        id: validation
+      
+      - name: Upload corruption report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corruption-report
+          path: silent-data-corruption-report.json
+          retention-days: 30
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Silent data corruption detected!"
+          echo "Confidence: ${{ steps.validation.outputs.confidence_score }}%"

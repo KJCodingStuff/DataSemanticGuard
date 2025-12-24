@@ -1,0 +1,61 @@
+name: 'Data Semantic Guard'
+description: 'Detects silent data corruption by analyzing semantic drift in data pipelines'
+author: 'Platform Engineering Team'
+
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  file_type:
+    description: 'Type of data file to analyze'
+    required: true
+    type: choice
+    options:
+      - csv
+      - json
+      - parquet
+  
+  file_path:
+    description: 'Path to the data file to analyze'
+    required: true
+  
+  comparison_type:
+    description: 'Semantic comparison logic to apply'
+    required: true
+    type: choice
+    options:
+      - currency_usd_to_inr
+      - currency_usd_to_jpy
+      - temperature_c_to_f
+      - length_m_to_ft
+      - custom_numeric_distribution
+  
+  baseline_file:
+    description: 'Path to baseline statistics JSON (optional, will generate if missing)'
+    required: false
+    default: '.github/data-baseline.json'
+  
+  confidence_threshold:
+    description: 'Confidence threshold to fail the action (0-100)'
+    required: false
+    default: '90'
+  
+  numeric_column:
+    description: 'Column name to analyze for numeric data files'
+    required: false
+    default: 'value'
+
+outputs:
+  confidence_score:
+    description: 'Confidence score of detected corruption (0-100)'
+  
+  artifact_path:
+    description: 'Path to the generated report artifact'
+  
+  detected_anomalies:
+    description: 'Number of anomalies detected'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
