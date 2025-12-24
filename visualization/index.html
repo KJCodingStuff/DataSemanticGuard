@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Semantic Guard - Corruption Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a0aec0;
+            font-size: 1.1em;
+        }
+
+        .upload-zone {
+            border: 3px dashed rgba(102, 126, 234, 0.5);
+            border-radius: 15px;
+            padding: 60px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 30px;
+        }
+
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-zone.dragover {
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .dashboard {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-label {
+            color: #a0aec0;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-change {
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .confidence-high { 
+            color: #fc8181; 
+            background: rgba(252, 129, 129, 0.1);
+        }
+        .confidence-medium { 
+            color: #f6ad55; 
+            background: rgba(246, 173, 85, 0.1);
+        }
+        .confidence-low { 
+            color: #68d391; 
+            background: rgba(104, 211, 145, 0.1);
+        }
+
+        .visualization-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #threejs-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .anomalies-section {
+            background: rgba(252, 129, 129, 0.1);
+            border: 1px solid rgba(252, 129, 129, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .anomaly-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #fc8181;
+        }
+
+        .diagnostics-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-table th {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-passed {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+            border: 1px solid #48bb78;
+        }
+
+        .status-failed {
+            background: rgba(252, 129, 129, 0.2);
+            color: #fc8181;
+            border: 1px solid #fc8181;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Data Semantic Guard</h1>
+            <p class="subtitle">Silent Data Corruption Visualization Dashboard</p>
+        </header>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📊</div>
+            <h2>Upload Corruption Report</h2>
+            <p style="margin-top: 10px; color: #a0aec0;">
+                Drag and drop your <code>silent-data-corruption-report.json</code> file here<br>
+                or click to browse
+            </p>
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+
+        <div class="dashboard" id="dashboard">
+            <!-- Metrics Overview -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Confidence Score</div>
+                    <div class="metric-value" id="confidenceScore">--</div>
+                    <div class="metric-change" id="confidenceLabel">Unknown</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Status</div>
+                    <div class="metric-value" style="font-size: 1.5em;">
+                        <span id="statusBadge" class="status-badge">--</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Anomalies Detected</div>
+                    <div class="metric-value" id="anomalyCount">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Analysis Type</div>
+                    <div class="metric-value" style="font-size: 1.3em;" id="comparisonType">--</div>
+                </div>
+            </div>
+
+            <!-- 3D Visualization -->
+            <div class="visualization-container">
+                <h2 style="margin-bottom: 20px;">📈 3D Distribution Comparison</h2>
+                <div id="threejs-container"></div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #667eea;"></div>
+                        <span>Baseline Data</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fc8181;"></div>
+                        <span>Current Data</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anomalies -->
+            <div class="anomalies-section" id="anomaliesSection" style="display: none;">
+                <h2 style="margin-bottom: 20px;">🚨 Detected Anomalies</h2>
+                <div id="anomaliesList"></div>
+            </div>
+
+            <!-- Statistics Comparison -->
+            <div class="visualization-container">
+                <h2 style="margin-bottom: 20px;">📊 Statistical Comparison</h2>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Baseline</th>
+                            <th>Current</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Diagnostics -->
+            <div class="diagnostics-section">
+                <h2 style="margin-bottom: 20px;">🔍 Diagnostic Report</h2>
+                <div id="diagnosticsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer;
+        let reportData = null;
+
+        // File upload handling
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const dashboard = document.getElementById('dashboard');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        });
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    reportData = JSON.parse(e.target.result);
+                    renderDashboard(reportData);
+                    uploadZone.style.display = 'none';
+                    dashboard.style.display = 'block';
+                } catch (error) {
+                    alert('Error parsing JSON file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderDashboard(data) {
+            // Render metrics
+            const confidence = data.metadata.confidence_score;
+            document.getElementById('confidenceScore').textContent = confidence + '%';
+            
+            const confidenceLabel = document.getElementById('confidenceLabel');
+            if (confidence >= 90) {
+                confidenceLabel.textContent = 'HIGH RISK';
+                confidenceLabel.className = 'metric-change confidence-high';
+            } else if (confidence >= 70) {
+                confidenceLabel.textContent = 'MEDIUM RISK';
+                confidenceLabel.className = 'metric-change confidence-medium';
+            } else {
+                confidenceLabel.textContent = 'LOW RISK';
+                confidenceLabel.className = 'metric-change confidence-low';
+            }
+
+            // Status badge
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = data.status;
+            statusBadge.className = data.status === 'FAILED' ? 'status-badge status-failed' : 'status-badge status-passed';
+
+            document.getElementById('anomalyCount').textContent = data.detected_anomalies.length;
+            document.getElementById('comparisonType').textContent = data.metadata.comparison_type.replace(/_/g, ' ').toUpperCase();
+
+            // Render anomalies
+            if (data.detected_anomalies.length > 0) {
+                document.getElementById('anomaliesSection').style.display = 'block';
+                const anomaliesList = document.getElementById('anomaliesList');
+                anomaliesList.innerHTML = data.detected_anomalies
+                    .map(anomaly => `<div class="anomaly-item">⚠️ ${anomaly}</div>`)
+                    .join('');
+            }
+
+            // Render statistics table
+            renderStatsTable(data.baseline_stats, data.current_stats);
+
+            // Render diagnostics
+            document.getElementById('diagnosticsContent').textContent = data.diagnostics;
+
+            // Render 3D visualization
+            render3DVisualization(data);
+        }
+
+        function renderStatsTable(baseline, current) {
+            const metrics = ['mean', 'median', 'std_dev', 'min', 'max'];
+            const tbody = document.getElementById('statsTableBody');
+            
+            tbody.innerHTML = metrics.map(metric => {
+                const baseVal = baseline[metric];
+                const currVal = current[metric];
+                const change = ((currVal - baseVal) / baseVal * 100).toFixed(1);
+                const changeColor = Math.abs(change) > 50 ? '#fc8181' : Math.abs(change) > 20 ? '#f6ad55' : '#68d391';
+                
+                return `
+                    <tr>
+                        <td><strong>${metric.replace('_', ' ').toUpperCase()}</strong></td>
+                        <td>${baseVal.toFixed(2)}</td>
+                        <td>${currVal.toFixed(2)}</td>
+                        <td style="color: ${changeColor};">${change > 0 ? '+' : ''}${change}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function render3DVisualization(data) {
+            const container = document.getElementById('threejs-container');
+            
+            // Setup Three.js scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(5, 5, 10);
+            camera.lookAt(0, 0, 0);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 10);
+            scene.add(directionalLight);
+
+            // Create histogram bars for baseline (blue)
+            createHistogramBars(data.sample_before, -2, 0x667eea);
+            
+            // Create histogram bars for current (red)
+            createHistogramBars(data.sample_after, 2, 0xfc8181);
+
+            // Add grid
+            const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotate scene slowly
+                scene.rotation.y += 0.002;
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        function createHistogramBars(data, xOffset, color) {
+            if (!data || data.length === 0) return;
+
+            // Create histogram bins
+            const bins = 10;
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const binWidth = (max - min) / bins;
+            
+            const histogram = new Array(bins).fill(0);
+            data.forEach(val => {
+                const binIndex = Math.min(Math.floor((val - min) / binWidth), bins - 1);
+                histogram[binIndex]++;
+            });
+
+            // Normalize heights
+            const maxCount = Math.max(...histogram);
+            
+            // Create bars
+            histogram.forEach((count, i) => {
+                const height = (count / maxCount) * 4;
+                const geometry = new THREE.BoxGeometry(0.3, height, 0.3);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: color,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const bar = new THREE.Mesh(geometry, material);
+                
+                bar.position.set(
+                    xOffset + (i - bins / 2) * 0.4,
+                    height / 2,
+                    0
+                );
+                
+                scene.add(bar);
+            });
+        }
+    </script>
+</body>
+</html>

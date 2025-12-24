@@ -14,6 +14,18 @@ jobs:
   semantic-validation:
     runs-on: ubuntu-latest
     
+  strategy:
+    matrix:
+      data_check:
+        - { file: 'data/transactions.csv', type: 'currency_usd_to_jpy', column: 'amount' }
+        - { file: 'data/temperatures.json', type: 'temperature_c_to_f', column: 'temperature' }
+        - { file: 'data/metrics.json', type: 'custom_numeric_distribution', column: 'value' }
+        - { file: 'data/holiday-sales.csv', type: 'custom_numeric_distribution', column: 'revenue' }
+
+steps:
+  - uses: ./.github/actions/data-semantic-guard
+    with:
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,10 +33,10 @@ jobs:
       - name: Validate data integrity
         uses: ./.github/actions/data-semantic-guard
         with:
-          file_type: csv
-          file_path: data/transactions-baseline.csv
-          comparison_type: currency_usd_to_jpy
-          numeric_column: amount
+          file_type: ${{ matrix.data_check.type }}
+          file_path: ${{ matrix.data_check.file }}
+          comparison_type: ${{ matrix.data_check.type }}
+          numeric_column: ${{ matrix.data_check.column }}
           confidence_threshold: 90
         continue-on-error: true
         id: validation
