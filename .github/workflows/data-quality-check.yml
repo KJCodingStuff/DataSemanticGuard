@@ -14,17 +14,13 @@ jobs:
   semantic-validation:
     runs-on: ubuntu-latest
     
-  strategy:
-    matrix:
-      data_check:
-        - { file: 'data/transactions.csv', type: 'currency_usd_to_jpy', column: 'amount' }
-        - { file: 'data/temperatures.json', type: 'temperature_c_to_f', column: 'temperature' }
-        - { file: 'data/metrics.json', type: 'custom_numeric_distribution', column: 'value' }
-        - { file: 'data/holiday-sales.csv', type: 'custom_numeric_distribution', column: 'revenue' }
-
-steps:
-  - uses: ./.github/actions/data-semantic-guard
-    with:
+    strategy:
+      matrix:
+        data_check:
+          - { file: 'data/transactions.csv', type: 'currency_usd_to_jpy', column: 'amount' }
+          - { file: 'data/temperatures.json', type: 'temperature_c_to_f', column: 'temperature' }
+          - { file: 'data/metrics.json', type: 'custom_numeric_distribution', column: 'value' }
+          - { file: 'data/holiday-sales.csv', type: 'custom_numeric_distribution', column: 'revenue' }
 
     steps:
       - name: Checkout code
