@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/data-semantic-guard
         with:
           file_type: csv
-          file_path: data/your-data-file.csv
+          file_path: data/transactions-baseline.csv
           comparison_type: currency_usd_to_jpy
           numeric_column: amount
           confidence_threshold: 90
