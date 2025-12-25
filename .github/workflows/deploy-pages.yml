@@ -1,23 +1,110 @@
-name: Deploy Visualization to Pages
+name: Deploy Visualization to GitHub Pages
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'visualization/**'
+      - 'data/report/**'
+      - 'data/baseline/**'
   workflow_dispatch:
 
+# Permissions for GitHub Pages deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Create deployment structure
+        run: |
+          # Create temporary deployment directory
+          mkdir -p _site
+          
+          # Copy visualization files
+          if [ -d "visualization" ]; then
+            cp -r visualization/* _site/
+          else
+            echo "⚠️  No visualization/ directory found, creating basic structure"
+            mkdir -p _site
+          fi
+          
+          # Copy data files to be accessible from visualization
+          if [ -d "data" ]; then
+            cp -r data _site/
+            echo "✅ Copied data/ directory to deployment"
+          else
+            echo "⚠️  No data/ directory found"
+            mkdir -p _site/data/report
+            mkdir -p _site/data/baseline
+          fi
+          
+          # Create index redirect if visualization has its own index
+          if [ -f "_site/index.html" ]; then
+            echo "✅ Using visualization/index.html"
+          else
+            echo "⚠️  No index.html found in visualization/"
+            cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="0; url=./visualization/index.html">
+            <title>Redirecting...</title>
+          </head>
+          <body>
+            <p>Redirecting to <a href="./visualization/index.html">visualization</a>...</p>
+          </body>
+          </html>
+          EOF
+          fi
+          
+          echo ""
+          echo "📦 Deployment structure:"
+          ls -laR _site/
+      
+      - name: Verify data files exist
+        run: |
+          echo "🔍 Checking for data files..."
+          
+          if [ -d "_site/data/report" ]; then
+            REPORT_COUNT=$(find _site/data/report -name "*.json" | wc -l)
+            echo "✅ Found $REPORT_COUNT report file(s)"
+            
+            if [ $REPORT_COUNT -gt 0 ]; then
+              echo "📄 Report files:"
+              find _site/data/report -name "*.json" -exec basename {} \;
+            fi
+          else
+            echo "⚠️  No report files found"
+          fi
+          
+          if [ -d "_site/data/baseline" ]; then
+            BASELINE_COUNT=$(find _site/data/baseline -name "*.json" | wc -l)
+            echo "✅ Found $BASELINE_COUNT baseline file(s)"
+            
+            if [ $BASELINE_COUNT -gt 0 ]; then
+              echo "📄 Baseline files:"
+              find _site/data/baseline -name "*.json" -exec basename {} \;
+            fi
+          else
+            echo "⚠️  No baseline files found"
+          fi
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -25,7 +112,37 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: visualization
+          path: '_site'
       
-      - name: Deploy to Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
+      
+      - name: Post deployment summary
+        run: |
+          echo "## 🚀 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Visualization Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "URL: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 Available Data Files" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d "_site/data/report" ]; then
+            echo "#### Reports:" >> $GITHUB_STEP_SUMMARY
+            find _site/data/report -name "*.json" -exec basename {} \; | while read file; do
+              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          if [ -d "_site/data/baseline" ]; then
+            echo "#### Baselines:" >> $GITHUB_STEP_SUMMARY
+            find _site/data/baseline -name "*.json" -exec basename {} \; | while read file; do
+              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Direct File Access" >> $GITHUB_STEP_SUMMARY
+          echo "Files are accessible at:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ steps.deployment.outputs.page_url }}data/report/<filename>.json\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ steps.deployment.outputs.page_url }}data/baseline/<filename>.json\`" >> $GITHUB_STEP_SUMMARY

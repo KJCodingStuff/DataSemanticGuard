@@ -650,25 +650,35 @@
 
         // Auto-load data if available (for GitHub Pages deployment)
         window.addEventListener('load', () => {
-            // Try to load from default location
-            const defaultPath = 'data/silent-data-corruption-report.json';
-            fetch(defaultPath)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
+            // Try to load from repository data/report/ directory
+            const reportPaths = [
+                '../data/report/silent-data-corruption-report.json',  // Relative to visualization/
+                'data/report/silent-data-corruption-report.json',      // Direct path
+                './data/report/silent-data-corruption-report.json'    // Current dir
+            ];
+            
+            async function tryLoadReport() {
+                for (const path of reportPaths) {
+                    try {
+                        console.log(`Trying to load report from: ${path}`);
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Auto-loaded report data from:', path);
+                            reportData = data;
+                            renderDashboard(reportData);
+                            uploadZone.style.display = 'none';
+                            dashboard.style.display = 'block';
+                            return;
+                        }
+                    } catch (error) {
+                        console.log(`Failed to load from ${path}:`, error.message);
                     }
-                    throw new Error('No default data file found');
-                })
-                .then(data => {
-                    console.log('Auto-loaded report data');
-                    reportData = data;
-                    renderDashboard(reportData);
-                    uploadZone.style.display = 'none';
-                    dashboard.style.display = 'block';
-                })
-                .catch(error => {
-                    console.log('No auto-load data available, waiting for manual upload');
-                });
+                }
+                console.log('No auto-load data available, waiting for manual upload');
+            }
+            
+            tryLoadReport();
         });
     </script>
 </body>
