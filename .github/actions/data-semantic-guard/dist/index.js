@@ -27911,6 +27911,7 @@ function loadOrCreateBaseline(baselinePath, currentStats, currentData) {
       core.info(`✓ Loaded baseline from ${baselinePath}`);
       return {
         stats: baseline.baseline_stats,
+        sampleData: baseline.sample_data,
         isNew: false
       };
     } catch (error) {
@@ -27931,13 +27932,16 @@ function loadOrCreateBaseline(baselinePath, currentStats, currentData) {
   const dir = path.dirname(baselinePath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+    core.info(`✓ Created directory: ${dir}`);
   }
   
   fs.writeFileSync(baselinePath, JSON.stringify(baselineData, null, 2));
   core.info(`✓ Created new baseline at ${baselinePath}`);
+  core.info(`✓ Baseline file size: ${fs.statSync(baselinePath).size} bytes`);
   
   return {
     stats: currentStats,
+    sampleData: currentData.slice(0, 10),
     isNew: true
   };
 }
@@ -27963,7 +27967,13 @@ function generateArtifact(detector, baselineStats, currentStats, currentData, me
     status: detector.confidence >= metadata.threshold ? 'FAILED' : 'PASSED'
   };
   
-  const artifactPath = path.join(process.cwd(), 'silent-data-corruption-report.json');
+  // Use new report directory structure
+  const reportDir = path.join(process.cwd(), 'data', 'report');
+  if (!fs.existsSync(reportDir)) {
+    fs.mkdirSync(reportDir, { recursive: true });
+  }
+  
+  const artifactPath = path.join(reportDir, 'silent-data-corruption-report.json');
   fs.writeFileSync(artifactPath, JSON.stringify(artifact, null, 2));
   
   return artifactPath;
@@ -27976,9 +27986,10 @@ async function run() {
   try {
     // Get inputs
     const fileType = core.getInput('file_type', { required: true });
-    const filePath = core.getInput('file_path', { required: true });
+    const fileName = core.getInput('file_name', { required: true });
+    const filePath = 'data/raw/' + fileName;
     const comparisonType = core.getInput('comparison_type', { required: true });
-    const baselineFile = core.getInput('baseline_file') || '.github/data-baseline.json';
+    const baselineFile = 'data/baseline/' + fileName;
     const threshold = parseInt(core.getInput('confidence_threshold') || '90', 10);
     const numericColumn = core.getInput('numeric_column') || 'value';
     
@@ -28033,9 +28044,13 @@ async function run() {
     if (baseline.isNew) {
       core.info('');
       core.info('ℹ️  First run detected. Baseline created. Exiting with success.');
+      core.info(`📝 Baseline saved to: ${baselineFile}`);
+      core.info('⚠️  IMPORTANT: Commit this baseline file to your repository!');
+      core.info('   Run: git add data/baseline/ && git commit -m "Add data baseline"');
       core.setOutput('confidence_score', 0);
       core.setOutput('detected_anomalies', 0);
-      core.setOutput('artifact_path', '');
+      core.setOutput('artifact_path', baselineFile);
+      core.setOutput('baseline_created', 'true');
       return;
     }
     
@@ -28065,10 +28080,12 @@ async function run() {
       fileType,
       comparisonType,
       threshold,
-      sampleBefore: baseline.stats.sample_data || []
+      sampleBefore: baseline.sampleData || []
     });
     
     core.info(`✓ Artifact saved to: ${artifactPath}`);
+    core.info(`✓ File exists: ${fs.existsSync(artifactPath)}`);
+    core.info(`✓ File size: ${fs.statSync(artifactPath).size} bytes`);
     
     // Set outputs
     core.setOutput('confidence_score', Math.round(detector.confidence));
