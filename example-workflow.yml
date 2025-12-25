@@ -23,19 +23,19 @@ jobs:
       
       - name: Setup test data
         run: |
-          mkdir -p data
+          mkdir -p data/raw
           # Simulate a data file (replace with your actual data source)
-          echo "transaction_id,amount,currency" > data/transactions.csv
-          echo "1,100.50,USD" >> data/transactions.csv
-          echo "2,250.00,USD" >> data/transactions.csv
-          echo "3,75.25,USD" >> data/transactions.csv
+          echo "transaction_id,amount,currency" > data/raw/transactions.csv
+          echo "1,100.50,USD" >> data/raw/transactions.csv
+          echo "2,250.00,USD" >> data/raw/transactions.csv
+          echo "3,75.25,USD" >> data/raw/transactions.csv
       
       # Example 1: Detect USD to JPY currency conversion
       - name: Check for currency unit corruption
         uses: ./.github/actions/data-semantic-guard
         with:
           file_type: csv
-          file_path: data/transactions.csv
+          file_path: data/raw/transactions.csv
           comparison_type: currency_usd_to_jpy
           numeric_column: amount
           confidence_threshold: 90
@@ -48,10 +48,10 @@ jobs:
         uses: ./.github/actions/data-semantic-guard
         with:
           file_type: json
-          file_path: data/weather_data.json
+          file_path: data/raw/weather_data.json
           comparison_type: temperature_c_to_f
           numeric_column: temperature
-          baseline_file: .github/baselines/weather-baseline.json
+          baseline_file: data/baseline/weather-baseline.json
         continue-on-error: true
         id: temperature_check
       
@@ -61,7 +61,7 @@ jobs:
         uses: ./.github/actions/data-semantic-guard
         with:
           file_type: json
-          file_path: data/metrics.json
+          file_path: data/raw/metrics.json
           comparison_type: custom_numeric_distribution
           numeric_column: metric_value
           confidence_threshold: 85
@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: silent-data-corruption-report
-          path: silent-data-corruption-report.json
+          path: data/report/silent-data-corruption-report.json
           retention-days: 30
       
       # Notify on detection
@@ -84,16 +84,16 @@ jobs:
           echo "## 🛡️ Data Semantic Guard Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ -f silent-data-corruption-report.json ]; then
+          if [ -f data/report/silent-data-corruption-report.json ]; then
             echo "### Confidence Score" >> $GITHUB_STEP_SUMMARY
-            CONFIDENCE=$(jq -r '.metadata.confidence_score' silent-data-corruption-report.json)
-            STATUS=$(jq -r '.status' silent-data-corruption-report.json)
+            CONFIDENCE=$(jq -r '.metadata.confidence_score' data/report/silent-data-corruption-report.json)
+            STATUS=$(jq -r '.status' data/report/silent-data-corruption-report.json)
             
             echo "- **Status**: $STATUS" >> $GITHUB_STEP_SUMMARY
             echo "- **Confidence**: $CONFIDENCE%" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             
-            ANOMALIES=$(jq -r '.detected_anomalies[]' silent-data-corruption-report.json)
+            ANOMALIES=$(jq -r '.detected_anomalies[]' data/report/silent-data-corruption-report.json)
             if [ ! -z "$ANOMALIES" ]; then
               echo "### 🚨 Detected Anomalies" >> $GITHUB_STEP_SUMMARY
               echo "$ANOMALIES" | while read line; do
@@ -110,8 +110,8 @@ jobs:
       - name: Evaluate final status
         if: always()
         run: |
-          if [ -f silent-data-corruption-report.json ]; then
-            STATUS=$(jq -r '.status' silent-data-corruption-report.json)
+          if [ -f data/report/silent-data-corruption-report.json ]; then
+            STATUS=$(jq -r '.status' data/report/silent-data-corruption-report.json)
             if [ "$STATUS" = "FAILED" ]; then
               echo "❌ Silent data corruption detected. Failing workflow."
               exit 1

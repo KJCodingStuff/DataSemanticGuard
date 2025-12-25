@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "timestamp": "2025-12-24T10:30:00Z",
+    "file_type": "csv",
+    "comparison_type": "currency_usd_to_jpy",
+    "confidence_score": 95,
+    "threshold": 90
+  },
+  "baseline_stats": {
+    "mean": 151.78,
+    "median": 125.25,
+    "std_dev": 82.47,
+    "min": 60.50,
+    "max": 320.00,
+    "p25": 85.50,
+    "p75": 200.00,
+    "count": 10
+  },
+  "current_stats": {
+    "mean": 22766.40,
+    "median": 18793.75,
+    "std_dev": 12370.50,
+    "min": 9075.00,
+    "max": 48000.00,
+    "p25": 12825.00,
+    "p75": 30000.00,
+    "count": 10
+  },
+  "detected_anomalies": [
+    "Severe magnitude increase: 14900.00% increase (ratio: 150.0000)",
+    "Possible USD to JPY conversion: ratio 150.00 matches expected 150.00"
+  ],
+  "diagnostics": "🚨 HIGH CONFIDENCE: Silent data corruption detected\n\nAnalysis type: USD to JPY conversion\n\nDetected anomalies:\n  1. Severe magnitude increase: 14900.00% increase (ratio: 150.0000)\n  2. Possible USD to JPY conversion: ratio 150.00 matches expected 150.00\n\nCommon causes:\n  - Unit conversion (currency, temperature, length)\n  - Locale/region change in data source\n  - Schema migration without data transformation\n  - Upstream API changes\n  - Data aggregation level changes",
+  "sample_before": [100.50, 250.00, 75.25, 180.00, 95.75],
+  "sample_after": [15075, 37500, 11288, 27000, 14363],
+  "status": "FAILED"
+}

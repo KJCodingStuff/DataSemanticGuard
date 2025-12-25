@@ -34,7 +34,7 @@ inputs:
   baseline_file:
     description: 'Path to baseline statistics JSON (optional, will generate if missing)'
     required: false
-    default: '.github/data-baseline.json'
+    default: default: 'data/baseline/data-baseline.json'
   
   confidence_threshold:
     description: 'Confidence threshold to fail the action (0-100)'
