@@ -147,9 +147,10 @@ async function run() {
   try {
     // Get inputs
     const fileType = core.getInput('file_type', { required: true });
-    const filePath = core.getInput('file_path', { required: true });
+    const fileName = core.getInput('file_name', { required: true });
+    const filePath = 'data/raw/' + fileName;
     const comparisonType = core.getInput('comparison_type', { required: true });
-    const baselineFile = core.getInput('baseline_file') || 'data/baseline/data-baseline.json';
+    const baselineFile = 'data/baseline/' + fileName;
     const threshold = parseInt(core.getInput('confidence_threshold') || '90', 10);
     const numericColumn = core.getInput('numeric_column') || 'value';
     

@@ -16,8 +16,8 @@ inputs:
       - json
       - parquet
   
-  file_path:
-    description: 'Path to the data file to analyze'
+  file_name:
+    description: 'Name to the data file to analyze'
     required: true
   
   comparison_type:
@@ -30,11 +30,6 @@ inputs:
       - temperature_c_to_f
       - length_m_to_ft
       - custom_numeric_distribution
-  
-  baseline_file:
-    description: 'Path to baseline statistics JSON (optional, will generate if missing)'
-    required: false
-    default: default: 'data/baseline/data-baseline.json'
   
   confidence_threshold:
     description: 'Confidence threshold to fail the action (0-100)'

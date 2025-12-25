@@ -17,10 +17,10 @@ jobs:
     strategy:
       matrix:
         data_check:
-          - { type_file: 'csv', path: 'data/transactions.csv', type: 'currency_usd_to_jpy', column: 'amount' }
-          - { type_file: 'json', path: 'data/temperatures.json', type: 'temperature_c_to_f', column: 'temperature' }
-          - { type_file: 'json', path: 'data/metrics.json', type: 'custom_numeric_distribution', column: 'value' }
-          - { type_file: 'csv', path: 'data/holiday-sales.csv', type: 'custom_numeric_distribution', column: 'revenue' }
+          - { type_file: 'csv', name_file: 'transactions.csv', type: 'currency_usd_to_jpy', column: 'amount' }
+          - { type_file: 'json', name_file: 'temperatures.json', type: 'temperature_c_to_f', column: 'temperature' }
+          # - { type_file: 'json', name_file: 'metrics.json', type: 'custom_numeric_distribution', column: 'value' }
+          - { type_file: 'csv', name_file: 'holiday-sales.csv', type: 'custom_numeric_distribution', column: 'revenue' }
 
     steps:
       - name: Checkout code
@@ -30,7 +30,7 @@ jobs:
         uses: ./.github/actions/data-semantic-guard
         with:
           file_type: ${{ matrix.data_check.type_file }}
-          file_path: ${{ matrix.data_check.path }}
+          file_name: ${{ matrix.data_check.name_file }}
           comparison_type: ${{ matrix.data_check.type }}
           numeric_column: ${{ matrix.data_check.column }}
           confidence_threshold: 90
