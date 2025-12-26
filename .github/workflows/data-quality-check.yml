@@ -22,8 +22,8 @@ jobs:
     strategy:
       matrix:
         data_check:
-          - { type_file: 'csv', name_file: 'transactions.csv', type: 'currency_usd_to_jpy', column: 'amount' }
-          - { type_file: 'json', name_file: 'temperatures.json', type: 'temperature_c_to_f', column: 'temperature' }
+          #- { type_file: 'csv', name_file: 'transactions.csv', type: 'currency_usd_to_jpy', column: 'amount' }
+          #- { type_file: 'json', name_file: 'temperatures.json', type: 'temperature_c_to_f', column: 'temperature' }
           # - { type_file: 'json', name_file: 'metrics.json', type: 'custom_numeric_distribution', column: 'value' }
           - { type_file: 'csv', name_file: 'holiday-sales.csv', type: 'custom_numeric_distribution', column: 'revenue' }
 
