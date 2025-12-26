@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": "2025-12-26T03:25:03.410Z",
+    "file_type": "csv",
+    "comparison_type": "custom_numeric_distribution",
+    "confidence_score": 0,
+    "threshold": 90
+  },
+  "baseline_stats": {
+    "mean": 573333.3333333334,
+    "median": 540000,
+    "std_dev": 101598.33769418781,
+    "min": 480000,
+    "max": 850000,
+    "p25": 520000,
+    "p75": 580000,
+    "count": 12,
+    "variance": 10322222222.222223
+  },
+  "current_stats": {
+    "mean": 573333.3333333334,
+    "median": 540000,
+    "std_dev": 101598.33769418781,
+    "min": 480000,
+    "max": 850000,
+    "p25": 520000,
+    "p75": 580000,
+    "count": 12,
+    "variance": 10322222222.222223
+  },
+  "detected_anomalies": [],
+  "diagnostics": "✅ No significant semantic drift detected\n\nAnalysis type: Generic numeric distribution",
+  "sample_before": [
+    500000,
+    480000,
+    520000,
+    510000,
+    530000,
+    540000,
+    550000,
+    560000,
+    540000,
+    580000
+  ],
+  "sample_after": [
+    500000,
+    480000,
+    520000,
+    510000,
+    530000,
+    540000,
+    550000,
+    560000,
+    540000,
+    580000
+  ],
+  "status": "PASSED"
+}
