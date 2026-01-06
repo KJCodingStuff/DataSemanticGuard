@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-01-06T03:39:00.165Z",
+    "timestamp": "2026-01-06T17:09:08.684Z",
     "file_type": "csv",
     "comparison_type": "custom_numeric_distribution",
     "confidence_score": 100,
@@ -18,21 +18,21 @@
     "variance": 10322222222.222223
   },
   "current_stats": {
-    "mean": 57333.333333333336,
-    "median": 54000,
-    "std_dev": 10159.83376941878,
-    "min": 48000,
-    "max": 85000,
-    "p25": 52000,
-    "p75": 58000,
+    "mean": 28000,
+    "median": 25000,
+    "std_dev": 6819.090848492928,
+    "min": 25000,
+    "max": 46000,
+    "p25": 25000,
+    "p75": 25000,
     "count": 12,
-    "variance": 103222222.22222221
+    "variance": 46500000
   },
   "detected_anomalies": [
-    "Severe magnitude drop: -90.00% decrease (ratio: 0.1000)",
-    "Data range contracted significantly: 10% of baseline range"
+    "Severe magnitude drop: -95.12% decrease (ratio: 0.0488)",
+    "Data range contracted significantly: 6% of baseline range"
   ],
-  "diagnostics": "🚨 HIGH CONFIDENCE: Silent data corruption detected\n\nAnalysis type: Generic numeric distribution\n\nDetected anomalies:\n  1. Severe magnitude drop: -90.00% decrease (ratio: 0.1000)\n  2. Data range contracted significantly: 10% of baseline range\n\nCommon causes:\n  - Unit conversion (currency, temperature, length)\n  - Locale/region change in data source\n  - Schema migration without data transformation\n  - Upstream API changes\n  - Data aggregation level changes",
+  "diagnostics": "🚨 HIGH CONFIDENCE: Silent data corruption detected\n\nAnalysis type: Generic numeric distribution\n\nDetected anomalies:\n  1. Severe magnitude drop: -95.12% decrease (ratio: 0.0488)\n  2. Data range contracted significantly: 6% of baseline range\n\nCommon causes:\n  - Unit conversion (currency, temperature, length)\n  - Locale/region change in data source\n  - Schema migration without data transformation\n  - Upstream API changes\n  - Data aggregation level changes",
   "sample_before": [
     500000,
     480000,
@@ -46,16 +46,16 @@
     580000
   ],
   "sample_after": [
-    50000,
-    48000,
-    52000,
-    51000,
-    53000,
-    54000,
-    55000,
-    56000,
-    54000,
-    58000
+    25000,
+    25000,
+    25000,
+    25000,
+    25000,
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
   ],
   "status": "FAILED"
 }
