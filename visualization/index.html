@@ -656,7 +656,7 @@
                 .then(response => {
                     if (response.ok) {
                         return response.json();
-                    throw new Error('No default data file found');
+                    }throw new Error('No default data file found');
                 })
                 .then(data => {
                     console.log('Auto-loaded report data');
