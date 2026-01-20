@@ -1,23 +1,12 @@
 {
   "metadata": {
-    "timestamp": "2026-01-19T03:50:37.727Z",
+    "timestamp": "2026-01-20T03:11:39.530Z",
     "file_type": "csv",
     "comparison_type": "custom_numeric_distribution",
     "confidence_score": 100,
     "threshold": 90
   },
   "baseline_stats": {
-    "mean": 573333.3333333334,
-    "median": 540000,
-    "std_dev": 101598.33769418781,
-    "min": 480000,
-    "max": 850000,
-    "p25": 520000,
-    "p75": 580000,
-    "count": 12,
-    "variance": 10322222222.222223
-  },
-  "current_stats": {
     "mean": 28000,
     "median": 25000,
     "std_dev": 6819.090848492928,
@@ -28,24 +17,23 @@
     "count": 12,
     "variance": 46500000
   },
+  "current_stats": {
+    "mean": 2733333.3333333335,
+    "median": 2500000,
+    "std_dev": 750925.355071254,
+    "min": 2000000,
+    "max": 4600000,
+    "p25": 2300000,
+    "p75": 2900000,
+    "count": 12,
+    "variance": 563888888888.8889
+  },
   "detected_anomalies": [
-    "Severe magnitude drop: -95.12% decrease (ratio: 0.0488)",
-    "Data range contracted significantly: 6% of baseline range"
+    "Severe magnitude increase: 9661.90% increase (ratio: 97.6190)",
+    "Data range expanded significantly: 123.8x larger than baseline"
   ],
-  "diagnostics": "🚨 HIGH CONFIDENCE: Silent data corruption detected\n\nAnalysis type: Generic numeric distribution\n\nDetected anomalies:\n  1. Severe magnitude drop: -95.12% decrease (ratio: 0.0488)\n  2. Data range contracted significantly: 6% of baseline range\n\nCommon causes:\n  - Unit conversion (currency, temperature, length)\n  - Locale/region change in data source\n  - Schema migration without data transformation\n  - Upstream API changes\n  - Data aggregation level changes",
+  "diagnostics": "🚨 HIGH CONFIDENCE: Silent data corruption detected\n\nAnalysis type: Generic numeric distribution\n\nDetected anomalies:\n  1. Severe magnitude increase: 9661.90% increase (ratio: 97.6190)\n  2. Data range expanded significantly: 123.8x larger than baseline\n\nCommon causes:\n  - Unit conversion (currency, temperature, length)\n  - Locale/region change in data source\n  - Schema migration without data transformation\n  - Upstream API changes\n  - Data aggregation level changes",
   "sample_before": [
-    500000,
-    480000,
-    520000,
-    510000,
-    530000,
-    540000,
-    550000,
-    560000,
-    540000,
-    580000
-  ],
-  "sample_after": [
     25000,
     25000,
     25000,
@@ -56,6 +44,18 @@
     25000,
     25000,
     25000
+  ],
+  "sample_after": [
+    2500000,
+    2600000,
+    2400000,
+    2700000,
+    2100000,
+    2300000,
+    2200000,
+    2900000,
+    2500000,
+    2000000
   ],
   "status": "FAILED"
 }
