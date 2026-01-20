@@ -648,6 +648,28 @@
             }
         }
 
+        // Auto-load data if available (for GitHub Pages deployment)
+        window.addEventListener('load', () => {
+            // Try to load from default location
+            const defaultPath = 'data/silent-data-corruption-report.json';
+            fetch(defaultPath)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    throw new Error('No default data file found');
+                })
+                .then(data => {
+                    console.log('Auto-loaded report data');
+                    reportData = data;
+                    renderDashboard(reportData);
+                    uploadZone.style.display = 'none';
+                    dashboard.style.display = 'block';
+                })
+                .catch(error => {
+                    console.log('No auto-load data available, waiting for manual upload');
+                });
+        });
+        /*
         // Auto-load data if available (for GitHub Pages deployment) // TODO Fix
         window.addEventListener('load', () => {
             // Try to load from repository data/report/ directory
@@ -680,6 +702,7 @@
             
             tryLoadReport();
         });
+        */
     </script>
 </body>
 </html>
