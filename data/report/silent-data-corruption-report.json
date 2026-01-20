@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-01-20T03:43:56.554Z",
+    "timestamp": "2026-01-20T06:21:45.301Z",
     "file_type": "csv",
     "comparison_type": "custom_numeric_distribution",
     "confidence_score": 100,
@@ -18,21 +18,21 @@
     "variance": 46500000
   },
   "current_stats": {
-    "mean": 2733333.3333333335,
-    "median": 2500000,
-    "std_dev": 750925.355071254,
-    "min": 2000000,
-    "max": 4600000,
-    "p25": 2300000,
-    "p75": 2900000,
+    "mean": 1316666.6666666667,
+    "median": 1200000,
+    "std_dev": 310465.60016995267,
+    "min": 1000000,
+    "max": 2000000,
+    "p25": 1200000,
+    "p75": 1200000,
     "count": 12,
-    "variance": 563888888888.8889
+    "variance": 96388888888.8889
   },
   "detected_anomalies": [
-    "Severe magnitude increase: 9661.90% increase (ratio: 97.6190)",
-    "Data range expanded significantly: 123.8x larger than baseline"
+    "Severe magnitude increase: 4602.38% increase (ratio: 47.0238)",
+    "Data range expanded significantly: 47.6x larger than baseline"
   ],
-  "diagnostics": "🚨 HIGH CONFIDENCE: Silent data corruption detected\n\nAnalysis type: Generic numeric distribution\n\nDetected anomalies:\n  1. Severe magnitude increase: 9661.90% increase (ratio: 97.6190)\n  2. Data range expanded significantly: 123.8x larger than baseline\n\nCommon causes:\n  - Unit conversion (currency, temperature, length)\n  - Locale/region change in data source\n  - Schema migration without data transformation\n  - Upstream API changes\n  - Data aggregation level changes",
+  "diagnostics": "🚨 HIGH CONFIDENCE: Silent data corruption detected\n\nAnalysis type: Generic numeric distribution\n\nDetected anomalies:\n  1. Severe magnitude increase: 4602.38% increase (ratio: 47.0238)\n  2. Data range expanded significantly: 47.6x larger than baseline\n\nCommon causes:\n  - Unit conversion (currency, temperature, length)\n  - Locale/region change in data source\n  - Schema migration without data transformation\n  - Upstream API changes\n  - Data aggregation level changes",
   "sample_before": [
     25000,
     25000,
@@ -46,16 +46,16 @@
     25000
   ],
   "sample_after": [
-    2500000,
-    2600000,
-    2400000,
-    2700000,
-    2100000,
-    2300000,
-    2200000,
-    2900000,
-    2500000,
-    2000000
+    1200000,
+    1200000,
+    1200000,
+    1200000,
+    1200000,
+    1200000,
+    1200000,
+    1200000,
+    1200000,
+    1000000
   ],
   "status": "FAILED"
 }
