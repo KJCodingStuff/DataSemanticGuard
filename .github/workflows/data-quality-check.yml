@@ -7,8 +7,6 @@ on:
       - 'data/**'
   pull_request:
     branches: [ main ]
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
 
 # Permissions needed for auto-commit
 permissions:
